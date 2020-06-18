@@ -14,12 +14,17 @@
       font: 13px Helvetica, Arial;
     }
 
-    form {
-      background: #fff;
-      padding: 3px;
+    .bottom {
       position: fixed;
       bottom: 0;
       width: 100%;
+
+    }
+
+    form {
+      background: #fff;
+      padding: 3px;
+
       border-color: #000;
       border-top-style: solid;
       border-top-width: 1px;
@@ -61,18 +66,19 @@
 
 <body>
   <ul id="messages"></ul>
-  <!-- <audio controls id="aud">
-    <source src="./juntos.ogg" type="audio/ogg">
-    <source src="./juntos.mp3" type="audio/mpeg">
-    Your browser does not support the audio tag.
-  </audio> -->
-  <form action="/" method="POST" id="chatForm">
-    <input id="txt" autocomplete="off" autofocus="on" placeholder="type your message here..." /><button>Send</button>
-  </form>
+  <div class="bottom">
+    <input type="button" value="BRB" id="brb" />
+    <input type="button" value="Yes" id="yes" />
+    <input type="button" value="Dot" id="dot" />
+    <form action="/" method="POST" id="chatForm">
+      <input id="txt" autocomplete="off" autofocus="on" placeholder="type your message here..." /><button>Send</button>
+    </form>
+  </div>
+
   <script>
-    // var socket = io.connect('http://anonymouschatappnodejs-env.eba-6wpc9wb2.ap-south-1.elasticbeanstalk.com/');
-    // var url = 'http://anonymouschatappnodejs-env.eba-6wpc9wb2.ap-south-1.elasticbeanstalk.com/';
-    var url = 'http://localhost:8080/';
+
+    var url = 'http://anonymouschatappnodejs-env.eba-6wpc9wb2.ap-south-1.elasticbeanstalk.com/';
+    // var url = 'http://localhost:8080/';
 
     var audio = new Audio('juntos.mp3');
 
@@ -95,13 +101,24 @@
 
     }
 
-
     // submit text message without reload/refresh the page
     $('form').submit(function (e) {
       e.preventDefault(); // prevents page reloading
       socket.emit('chat_message', $('#txt').val());
       $('#txt').val('');
       return false;
+    });
+
+    $('#brb').click(() => {
+      socket.emit('chat_message', 'BRB');
+    });
+
+    $('#yes').click(() => {
+      socket.emit('chat_message', 'Yes');
+    });
+
+    $('#dot').click(() => {
+      socket.emit('chat_message', '.');
     });
 
     // append the chat text message
