@@ -77,7 +77,8 @@
 
   <script>
 
-    var url = 'http://anonymouschatappnodejs-env.eba-6wpc9wb2.ap-south-1.elasticbeanstalk.com/';
+    var url = location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '');
+    // var url = 'http://anonymouschatappnodejs-env.eba-6wpc9wb2.ap-south-1.elasticbeanstalk.com/';
     // var url = 'http://localhost:8080/';
 
     var audio = new Audio('juntos.mp3');
