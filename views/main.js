@@ -34,6 +34,7 @@ $(function () {
 
     var socket = io.connect(url);
 
+
     const addParticipantsMessage = (data) => {
         var message = '';
         if (data.numUsers === 1) {
@@ -53,6 +54,8 @@ $(function () {
 
         // If the username is valid
         if (username) {
+            audio = new Audio('juntos.mp3');
+            audio.load();
             $loginPage.fadeOut();
             $chatPage.show();
             $loginPage.off('click');

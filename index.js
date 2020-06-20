@@ -18,81 +18,81 @@ app.get('*', function (req, res) {
 
 
 
-io.sockets.on('connection', function (client) {
+io.sockets.on('connection', function (socket) {
 
-    client.on('username', function (username) {
-        client.username = username;
-        io.emit('is_online', '🔵 <i>' + client.username + ' join the chat..</i>');
+    socket.on('username', function (username) {
+        socket.username = username;
+        io.emit('is_online', '🔵 <i>' + socket.username + ' join the chat..</i>');
     });
 
-    client.on('join_chat', (chatroomName, username) => {
+    socket.on('join_chat', (chatroomName, username) => {
         console.log(chatroomName);
 
-        client.username = username;
-        client.chatroomName = chatroomName;
+        socket.username = username;
+        socket.chatroomName = chatroomName;
 
-        client.join(chatroomName)
-        io.sockets.in(client.chatroomName).emit('is_online', '🔵 <i>' + client.username + ' joined the chatroom:' + client.chatroomName + '.</i>');
+        socket.join(chatroomName)
+        io.sockets.in(socket.chatroomName).emit('is_online', '🔵 <i>' + socket.username + ' joined the chatroom:' + socket.chatroomName + '.</i>');
 
     });
 
-    client.on('disconnect', function (username) {
-        var room = io.sockets.adapter.rooms[client.chatroomName];
+    socket.on('disconnect', function (username) {
+        var room = io.sockets.adapter.rooms[socket.chatroomName];
         length = room === undefined ? 0 : room.length;
-        io.sockets.in(client.chatroomName).emit('user left', {
-            username: client.username,
+        io.sockets.in(socket.chatroomName).emit('user left', {
+            username: socket.username,
             numUsers: length
         });
     })
 
-    client.on('chat_message', function (message) {
+    socket.on('chat_message', function (message) {
 
-        console.log(client.chatroomName + " > " + client.username + " > " + message);
+        console.log(socket.chatroomName + " > " + socket.username + " > " + message);
 
-        io.sockets.in(client.chatroomName).emit('chat_message', '<strong>' + client.username + '</strong>: ' + message);
+        io.sockets.in(socket.chatroomName).emit('chat_message', '<strong>' + socket.username + '</strong>: ' + message);
 
     });
 
-    client.on('new message', function (message) {
+    socket.on('new message', function (message) {
 
-        console.log(client.chatroomName + " > " + client.username + " > " + message);
+        console.log(socket.chatroomName + " > " + socket.username + " > " + message);
 
-        io.sockets.in(client.chatroomName).emit('new message', {
-            username: client.username,
+        io.sockets.in(socket.chatroomName).emit('new message', {
+            username: socket.username,
             message: message
         });
 
     });
 
     // when the client emits 'typing', we broadcast it to others
-    client.on('typing', () => {
-        io.sockets.in(client.chatroomName).emit('typing', {
-            username: client.username
+    socket.on('typing', () => {
+        io.sockets.in(socket.chatroomName).emit('typing', {
+            username: socket.username
         });
     });
 
     // when the client emits 'stop typing', we broadcast it to others
-    client.on('stop typing', () => {
-        io.sockets.in(client.chatroomName).emit('stop typing', {
-            username: client.username
+    socket.on('stop typing', () => {
+        io.sockets.in(socket.chatroomName).emit('stop typing', {
+            username: socket.username
         });
     });
 
-    client.on('join chat', (chatroomName, username) => {
-        client.username = username;
-        client.chatroomName = chatroomName;
+    socket.on('join chat', (chatroomName, username) => {
+        socket.username = username;
+        socket.chatroomName = chatroomName;
 
-        client.join(chatroomName)
+        socket.join(chatroomName)
 
         var room = io.sockets.adapter.rooms[chatroomName];
         length = room === undefined ? 0 : room.length;
 
 
         console.log(length);
-        console.log("join chat > " + client.chatroomName + " > " + client.username);
+        console.log("join chat > " + socket.chatroomName + " > " + socket.username);
 
-        io.sockets.in(client.chatroomName).emit('user joined', {
-            username: client.username,
+        io.sockets.in(socket.chatroomName).emit('user joined', {
+            username: socket.username,
             numUsers: length
         });
     });
