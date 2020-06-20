@@ -37,7 +37,12 @@ io.sockets.on('connection', function (client) {
     });
 
     client.on('disconnect', function (username) {
-        io.sockets.in(client.chatroomName).emit('is_online', '🔴 <i>' + client.username + ' left the chat..</i>');
+        var room = io.sockets.adapter.rooms[client.chatroomName];
+
+        io.sockets.in(client.chatroomName).emit('user left', {
+            username: client.username,
+            numUsers: room.length
+        });
     })
 
     client.on('chat_message', function (message) {
