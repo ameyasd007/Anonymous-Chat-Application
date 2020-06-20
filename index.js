@@ -3,6 +3,9 @@ const app = express();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
 
+app.engine('html', require('ejs').renderFile)
+app.set('view engine', 'html')
+
 app.get('/', function (req, res) {
     res.render('index.html');
 });
