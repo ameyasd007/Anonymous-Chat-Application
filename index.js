@@ -4,7 +4,7 @@ const http = require('http').Server(app);
 const io = require('socket.io')(http);
 
 app.get('/', function (req, res) {
-    res.render('index.ejs');
+    res.render('index.html');
 });
 
 app.use(express.static('views'))
@@ -16,25 +16,10 @@ app.get('*', function (req, res) {
 
 
 io.sockets.on('connection', function (client) {
-    // console.log(client)
 
     client.on('username', function (username) {
         client.username = username;
         io.emit('is_online', '🔵 <i>' + client.username + ' join the chat..</i>');
-    });
-
-    client.on('new_channel', function (chatroomName, username) {
-        console.log(chatroomName);
-
-        client.username = username;
-        client.chatroomName = chatroomName;
-
-        client.join(chatroomName)
-        console.log(client)
-        io.to(chatroomName).emit('hi');
-
-        // socket.username = username;
-        // io.emit('is_online', '🔵 <i>' + socket.username + ' join the chat..</i>');
     });
 
     client.on('join_chat', (chatroomName, username) => {
@@ -45,20 +30,62 @@ io.sockets.on('connection', function (client) {
 
         client.join(chatroomName)
         io.sockets.in(client.chatroomName).emit('is_online', '🔵 <i>' + client.username + ' joined the chatroom:' + client.chatroomName + '.</i>');
-        // io.to(chatroomName).emit('is_online', '🔵 <i>' + client.username + ' joined the chatroom:' + chatroomName + '.</i>');
 
-        // socket.username = username;
-        // io.emit('is_online', '🔵 <i>' + client.username + ' join the chat..</i>');
     });
 
     client.on('disconnect', function (username) {
-        io.emit('is_online', '🔴 <i>' + client.username + ' left the chat..</i>');
+        io.sockets.in(client.chatroomName).emit('is_online', '🔴 <i>' + client.username + ' left the chat..</i>');
     })
 
     client.on('chat_message', function (message) {
+
+        console.log(client.chatroomName + " > " + client.username + " > " + message);
+
         io.sockets.in(client.chatroomName).emit('chat_message', '<strong>' + client.username + '</strong>: ' + message);
 
-        // io.emit('chat_message', '<strong>' + client.username + '</strong>: ' + message);
+    });
+
+    client.on('new message', function (message) {
+
+        console.log(client.chatroomName + " > " + client.username + " > " + message);
+
+        io.sockets.in(client.chatroomName).emit('new message', {
+            username: client.username,
+            message: message
+        });
+
+    });
+
+    // when the client emits 'typing', we broadcast it to others
+    client.on('typing', () => {
+        io.sockets.in(client.chatroomName).emit('typing', {
+            username: client.username
+        });
+    });
+
+    // when the client emits 'stop typing', we broadcast it to others
+    client.on('stop typing', () => {
+        io.sockets.in(client.chatroomName).emit('stop typing', {
+            username: client.username
+        });
+    });
+
+    client.on('join chat', (chatroomName, username) => {
+        client.username = username;
+        client.chatroomName = chatroomName;
+
+        client.join(chatroomName)
+
+        var room = io.sockets.adapter.rooms[chatroomName];
+        room.length;
+
+        console.log(room.length);
+        console.log("join chat > " + client.chatroomName + " > " + client.username);
+
+        io.sockets.in(client.chatroomName).emit('user joined', {
+            username: client.username,
+            numUsers: room.length
+        });
     });
 
 });

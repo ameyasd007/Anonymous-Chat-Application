@@ -16,14 +16,23 @@ $(function () {
     var $loginPage = $('.login.page'); // The login page
     var $chatPage = $('.chat.page'); // The chatroom page
 
+    var chatroomInput = $('.chatroomInput');
+
+
+
+
+
     // Prompt for setting a username
     var username;
+    var chatroomName;
     var connected = false;
     var typing = false;
     var lastTypingTime;
-    var $currentInput = $usernameInput.focus();
+    var $currentInput = chatroomInput.focus();
+    var url = location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '');
+    var audio = new Audio('juntos.mp3');
 
-    var socket = io();
+    var socket = io.connect(url);
 
     const addParticipantsMessage = (data) => {
         var message = '';
@@ -37,6 +46,9 @@ $(function () {
 
     // Sets the client's username
     const setUsername = () => {
+        if (!chatroomName) {
+            $currentInput = chatroomInput.focus();
+        }
         username = cleanInput($usernameInput.val().trim());
 
         // If the username is valid
@@ -47,22 +59,24 @@ $(function () {
             $currentInput = $inputMessage.focus();
 
             // Tell the server your username
-            socket.emit('add user', username);
+            socket.emit('join chat', chatroomName, username);
         }
     }
 
+    const setChatroomName = () => {
+        chatroomName = cleanInput(chatroomInput.val().trim());
+        if (chatroomName) {
+            $currentInput = $usernameInput.focus();
+        }
+    }
     // Sends a chat message
     const sendMessage = () => {
         var message = $inputMessage.val();
         // Prevent markup from being injected into the message
         message = cleanInput(message);
         // if there is a non-empty message and a socket connection
-        if (message && connected) {
+        if (message) {
             $inputMessage.val('');
-            addChatMessage({
-                username: username,
-                message: message
-            });
             // tell server to execute 'new message' and send along one parameter
             socket.emit('new message', message);
         }
@@ -90,8 +104,9 @@ $(function () {
         var $messageBodyDiv = $('<span class="messageBody">')
             .text(data.message);
 
+        var listItem = username === data.username ? '<li class="message sender"/>' : '<li class="message"/>';
         var typingClass = data.typing ? 'typing' : '';
-        var $messageDiv = $('<li class="message"/>')
+        var $messageDiv = $(listItem)
             .data('username', data.username)
             .addClass(typingClass)
             .append($usernameDiv, $messageBodyDiv);
@@ -151,22 +166,22 @@ $(function () {
 
     // Updates the typing event
     const updateTyping = () => {
-        if (connected) {
-            if (!typing) {
-                typing = true;
-                socket.emit('typing');
-            }
-            lastTypingTime = (new Date()).getTime();
-
-            setTimeout(() => {
-                var typingTimer = (new Date()).getTime();
-                var timeDiff = typingTimer - lastTypingTime;
-                if (timeDiff >= TYPING_TIMER_LENGTH && typing) {
-                    socket.emit('stop typing');
-                    typing = false;
-                }
-            }, TYPING_TIMER_LENGTH);
+        // if (connected) {
+        if (!typing) {
+            typing = true;
+            socket.emit('typing');
         }
+        lastTypingTime = (new Date()).getTime();
+
+        setTimeout(() => {
+            var typingTimer = (new Date()).getTime();
+            var timeDiff = typingTimer - lastTypingTime;
+            if (timeDiff >= TYPING_TIMER_LENGTH && typing) {
+                socket.emit('stop typing');
+                typing = false;
+            }
+        }, TYPING_TIMER_LENGTH);
+        // }
     }
 
     // Gets the 'X is typing' messages of a user
@@ -201,7 +216,11 @@ $(function () {
                 sendMessage();
                 socket.emit('stop typing');
                 typing = false;
-            } else {
+            }
+            else if (!chatroomName) {
+                setChatroomName();
+            }
+            else {
                 setUsername();
             }
         }
@@ -223,6 +242,8 @@ $(function () {
         $inputMessage.focus();
     });
 
+
+
     // Socket events
 
     // Whenever the server emits 'login', log the login message
@@ -238,12 +259,16 @@ $(function () {
 
     // Whenever the server emits 'new message', update the chat body
     socket.on('new message', (data) => {
+        if (data.username !== username)
+            audio.play();
         addChatMessage(data);
     });
 
     // Whenever the server emits 'user joined', log it in the chat body
     socket.on('user joined', (data) => {
         log(data.username + ' joined');
+        if (data.username !== username)
+            audio.play();
         addParticipantsMessage(data);
     });
 
@@ -256,7 +281,8 @@ $(function () {
 
     // Whenever the server emits 'typing', show the typing message
     socket.on('typing', (data) => {
-        addChatTyping(data);
+        if (data.username !== username)
+            addChatTyping(data);
     });
 
     // Whenever the server emits 'stop typing', kill the typing message
@@ -271,7 +297,7 @@ $(function () {
     socket.on('reconnect', () => {
         log('you have been reconnected');
         if (username) {
-            socket.emit('add user', username);
+            socket.emit('join chat', chatroomName, username);
         }
     });
 
