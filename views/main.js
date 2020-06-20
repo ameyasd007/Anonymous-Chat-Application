@@ -60,6 +60,7 @@ $(function () {
 
             // Tell the server your username
             socket.emit('join chat', chatroomName, username);
+            document.title = chatroomName;
         }
     }
 

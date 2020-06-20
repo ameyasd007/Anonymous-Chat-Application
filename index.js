@@ -38,10 +38,10 @@ io.sockets.on('connection', function (client) {
 
     client.on('disconnect', function (username) {
         var room = io.sockets.adapter.rooms[client.chatroomName];
-
+        length = room === undefined ? 0 : room.length;
         io.sockets.in(client.chatroomName).emit('user left', {
             username: client.username,
-            numUsers: room.length
+            numUsers: length
         });
     })
 
@@ -85,14 +85,15 @@ io.sockets.on('connection', function (client) {
         client.join(chatroomName)
 
         var room = io.sockets.adapter.rooms[chatroomName];
-        room.length;
+        length = room === undefined ? 0 : room.length;
 
-        console.log(room.length);
+
+        console.log(length);
         console.log("join chat > " + client.chatroomName + " > " + client.username);
 
         io.sockets.in(client.chatroomName).emit('user joined', {
             username: client.username,
-            numUsers: room.length
+            numUsers: length
         });
     });
 
